@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>咖啡品牌电商翻译工具</title>
+<style>
+:root {
+  --bg: #0d0d0d;
+  --surface: #161616;
+  --surface2: #1f1f1f;
+  --surface3: #252525;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #f0ece4;
+  --text2: #8a8680;
+  --text3: #5a5652;
+  --accent: #c8a96e;
+  --accent-dim: rgba(200,169,110,0.1);
+  --accent-border: rgba(200,169,110,0.25);
+  --green: #4caf6e;
+  --amber: #d4892a;
+  --red: #e05252;
+  --blue: #7ab4f5;
+  --blue-dim: rgba(122,180,245,0.1);
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+
+/* Header */
+header{border-bottom:1px solid var(--border);padding:0 2rem;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(13,13,13,0.93);backdrop-filter:blur(12px);z-index:100;}
+.logo{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;}
+.logo-icon{width:26px;height:26px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.header-right{display:flex;align-items:center;gap:12px;}
+.header-tag{font-size:11px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;}
+
+/* API bar */
+.api-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 2rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.api-bar.set{border-bottom-color:rgba(76,175,110,0.2);}
+.api-label{font-size:12px;color:var(--text2);white-space:nowrap;}
+.api-input{flex:1;min-width:180px;max-width:340px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:12px;font-family:monospace;padding:6px 10px;outline:none;}
+.api-input:focus{border-color:var(--border2);}
+.btn-primary{font-size:12px;padding:6px 14px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#1a1208;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.btn-primary:hover{opacity:.85;}
+.btn-ghost{font-size:12px;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text);}
+.api-status{font-size:11px;color:var(--text3);}
+.api-status.ok{color:var(--green);}
+.remember-wrap{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text3);cursor:pointer;}
+.remember-wrap input{accent-color:var(--accent);}
+
+/* Main */
+main{flex:1;max-width:1200px;margin:0 auto;width:100%;padding:1.5rem 2rem 4rem;}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+.toolbar-left{display:flex;align-items:center;gap:10px;}
+.module-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);font-size:12px;font-family:inherit;padding:6px 10px;outline:none;cursor:pointer;}
+.module-select:focus{border-color:var(--border2);}
+.toolbar-right{display:flex;align-items:center;gap:8px;}
+
+/* Language tabs */
+.lang-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:0;}
+.lang-tab{font-size:13px;padding:8px 16px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap;}
+.lang-tab:hover{color:var(--text2);}
+.lang-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.lang-tab .tab-flag{margin-right:5px;}
+
+/* Table container */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead tr{background:var(--surface2);border-bottom:1px solid var(--border);}
+th{text-align:left;padding:10px 14px;font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);white-space:nowrap;}
+td{padding:0;vertical-align:top;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.015);}
+
+/* Cell types */
+.cell-label{padding:10px 14px;min-width:120px;max-width:180px;}
+.label-input{width:100%;background:transparent;border:none;color:var(--text2);font-size:12px;font-family:inherit;outline:none;padding:0;}
+.label-input::placeholder{color:var(--text3);}
+.label-input:focus{color:var(--text);}
+
+.cell-source{padding:10px 14px;min-width:200px;}
+.source-input{width:100%;background:transparent;border:none;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:none;padding:0;line-height:1.6;min-height:20px;}
+.source-input::placeholder{color:var(--text3);}
+
+.cell-result{padding:10px 14px;min-width:220px;position:relative;}
+.result-text{font-size:13px;line-height:1.6;color:var(--text);min-height:20px;word-break:break-word;}
+.result-text.empty{color:var(--text3);font-style:italic;}
+.result-text strong{font-weight:700;}
+.result-text em{font-style:italic;}
+
+/* Status indicator */
+.cell-status{padding:10px 8px;width:28px;text-align:center;}
+.row-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);margin:0 auto;transition:background .2s;}
+.row-dot.loading{background:var(--amber);animation:blink 1s infinite;}
+.row-dot.done{background:var(--green);}
+.row-dot.error{background:var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Notes column */
+.cell-notes{padding:10px 14px;min-width:200px;max-width:300px;}
+.note-tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:10px;background:var(--blue-dim);color:var(--blue);border:1px solid rgba(122,180,245,0.15);margin:2px 3px 2px 0;line-height:1.5;}
+.note-tag.unit{background:rgba(200,169,110,0.1);color:var(--accent);border-color:var(--accent-border);}
+.note-tag.format{background:rgba(76,175,110,0.1);color:var(--green);border-color:rgba(76,175,110,0.2);}
+.note-empty{color:var(--text3);font-size:12px;font-style:italic;}
+
+/* Action cell */
+.cell-action{padding:8px;width:36px;text-align:center;}
+.del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:3px 6px;border-radius:4px;transition:all .1s;line-height:1;}
+.del-btn:hover{background:rgba(224,82,82,0.12);color:var(--red);}
+
+/* Copy cell */
+.cell-copy{padding:8px;width:36px;text-align:center;}
+.copy-cell-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:3px 5px;border-radius:4px;transition:all .1s;}
+.copy-cell-btn:hover{background:var(--surface3);color:var(--text2);}
+.copy-cell-btn.copied{color:var(--green);}
+
+/* Add row */
+.add-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--border);background:var(--surface);}
+.add-row-btn{font-size:12px;color:var(--text3);background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:5px 12px;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.add-row-btn:hover{border-color:var(--border2);color:var(--text2);}
+
+/* Translate all bar */
+.action-bar{display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:10px;}
+.action-bar-left{font-size:12px;color:var(--text3);}
+.action-bar-right{display:flex;gap:8px;}
+
+/* Export modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;width:90%;max-width:480px;}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:16px;}
+.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end;}
+.export-option{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;margin-bottom:8px;transition:border-color .15s;}
+.export-option:hover{border-color:var(--border2);}
+.export-option-icon{font-size:20px;}
+.export-option-text{font-size:13px;color:var(--text2);}
+.export-option-title{font-size:13px;font-weight:500;color:var(--text);display:block;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:48px 24px;color:var(--text3);}
+.empty-state-icon{font-size:32px;margin-bottom:12px;}
+.empty-state p{font-size:14px;}
+
+/* Responsive */
+@media(max-width:768px){
+  header,main,.api-bar{padding-left:1rem;padding-right:1rem;}
+  .lang-tab{padding:8px 10px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="logo-icon">☕</div>电商翻译工具</div>
+  <div class="header-right">
+    <span class="header-tag">便携咖啡品牌 · 四语言</span>
+  </div>
+</header>
+
+<!-- API Key bar -->
+<div class="api-bar" id="api-bar">
+  <span class="api-label">🔑 Gemini API Key</span>
+  <input class="api-input" type="password" id="api-key-input" placeholder="AIza...">
+  <label class="remember-wrap"><input type="checkbox" id="remember-key"> 记住</label>
+  <button class="btn-primary" onclick="saveKey()">保存</button>
+  <span class="api-status" id="api-status">未设置</span>
+</div>
+
+<main>
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <select class="module-select" id="module-select">
+        <option value="banner">首页 Banner</option>
+        <option value="product">产品标题 & 描述</option>
+        <option value="cta">按钮文案</option>
+        <option value="nav">导航 & 分类</option>
+        <option value="brand">品牌故事</option>
+      </select>
+      <span style="font-size:12px;color:var(--text3);" id="row-count"></span>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn-ghost" onclick="exportCSV()">导出 CSV</button>
+      <button class="btn-ghost" onclick="clearAll()">清空全部</button>
+      <button class="btn-primary" onclick="translateAll()">▶ 翻译全部</button>
+    </div>
+  </div>
+
+  <!-- Language tabs -->
+  <div class="lang-tabs">
+    <button class="lang-tab active" data-lang="de" onclick="switchLang('de')"><span class="tab-flag">🇩🇪</span>德语</button>
+    <button class="lang-tab" data-lang="fr" onclick="switchLang('fr')"><span class="tab-flag">🇫🇷</span>法语</button>
+    <button class="lang-tab" data-lang="it" onclick="switchLang('it')"><span class="tab-flag">🇮🇹</span>意大利语</button>
+    <button class="lang-tab" data-lang="es" onclick="switchLang('es')"><span class="tab-flag">🇪🇸</span>西班牙语</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="main-table">
+      <thead>
+        <tr>
+          <th style="width:36px"></th>
+          <th>字段标签</th>
+          <th>原文</th>
+          <th id="result-col-header">🇩🇪 德语译文</th>
+          <th style="width:36px"></th>
+          <th>本地化备注</th>
+          <th style="width:36px"></th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+      </tbody>
+    </table>
+    <div class="add-row">
+      <button class="add-row-btn" onclick="addRow()">＋ 添加字段</button>
+    </div>
+  </div>
+
+  <!-- Action bar -->
+  <div class="action-bar">
+    <span class="action-bar-left" id="status-bar">就绪</span>
+    <div class="action-bar-right">
+      <button class="btn-ghost" onclick="translateSelected()">翻译选中行</button>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── State ──────────────────────────────────────────────
+let apiKey = '';
+let activeLang = 'de';
+let rows = []; // {id, label, source, results:{de,fr,it,es}, notes:{de,fr,it,es}, status}
+let rowCounter = 0;
+
+const LANG_NAMES = {de:'🇩🇪 德语',fr:'🇫🇷 法语',it:'🇮🇹 意大利语',es:'🇪🇸 西班牙语'};
+const LANG_LOCALES = {
+  de: '德语（德国/奥地利/瑞士市场）',
+  fr: '法语（法国/比利时/瑞士市场）',
+  it: '意大利语（意大利市场）',
+  es: '西班牙语（西班牙/拉丁美洲市场）'
+};
+
+const MODULE_CONTEXT = {
+  banner: '用于首页 Banner 标语，需情感冲击力，简洁大气，1-2句为佳。',
+  product: '用于产品标题或详情描述，清晰传达产品特点和使用场景，突出轻户外体验感。',
+  cta: '用于按钮文案（如立即购买/探索更多），必须动词开头，简洁有力，≤5词。',
+  nav: '用于导航栏或分类标签，简短精准，1-3个词为佳。',
+  brand: '用于品牌故事页面，语气真诚有温度，体现探索精神与品牌价值观。'
+};
+
+const SYSTEM_PROMPT = `你是专业的多语言电商文案翻译师，专注于便携式咖啡机品牌独立站。
+品牌调性：轻户外 / 探索生活方式，传递自由、冒险、精致野趣。
+产品：便携式咖啡机、磨豆机、奶泡棒及户外咖啡配件。
+
+术语表（严格统一）：
+- 便携式咖啡机 → DE:Tragbare Kaffeemaschine / FR:Machine à café portable / IT:Macchina da caffè portatile / ES:Cafetera portátil
+- 磨豆机 → DE:Kaffeemühle / FR:Moulin à café / IT:Macinacaffè / ES:Molinillo de café
+- 奶泡棒 → DE:Milchaufschäumer / FR:Mousseur à lait / IT:Montalatte / ES:Espumador de leche
+
+本地化规范（必须执行）：
+- 单位换算：德法意西市场均使用公制（摄氏度℃、克g、毫升ml、厘米cm）；如原文含华氏度需转换为摄氏度并备注；如含英寸需转换为厘米并备注
+- 货币：如含美元$，备注建议换算为欧元€
+- 日期格式：欧洲用 DD/MM/YYYY
+- 德语：名词首字母大写；法语：注意阴阳性配合；意大利语：注意 Lei 敬语；西班牙语：区分欧洲西语（vosotros）与拉美西语（ustedes），默认使用欧洲西语
+- 格式保留：原文中的**加粗**、*斜体*、换行、空格必须在译文中原样保留
+
+返回格式（严格JSON，不加代码块）：
+{
+  "de": {"text": "译文（保留格式标记）", "notes": ["备注1", "备注2"]},
+  "fr": {"text": "译文", "notes": []},
+  "it": {"text": "译文", "notes": []},
+  "es": {"text": "译文", "notes": []}
+}`;
+
+// ── API Key ─────────────────────────────────────────────
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('gemini_api_key');
+  if (saved) {
+    apiKey = saved;
+    document.getElementById('api-key-input').value = saved;
+    document.getElementById('remember-key').checked = true;
+    setApiStatus(true);
+  }
+  // Add 3 default rows
+  addRow('标题', '');
+  addRow('副标题', '');
+  addRow('按钮文案', '');
+  updateRowCount();
+});
+
+function saveKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val.startsWith('AIza')) {
+    document.getElementById('api-status').textContent = '格式有误';
+    return;
+  }
+  apiKey = val;
+  if (document.getElementById('remember-key').checked) localStorage.setItem('gemini_api_key', val);
+  else localStorage.removeItem('gemini_api_key');
+  setApiStatus(true);
+}
+
+function setApiStatus(ok) {
+  const el = document.getElementById('api-status');
+  el.textContent = ok ? '✓ 已设置' : '未设置';
+  el.className = 'api-status' + (ok ? ' ok' : '');
+  document.getElementById('api-bar').classList.toggle('set', ok);
+}
+
+// ── Lang tabs ───────────────────────────────────────────
+function switchLang(lang) {
+  activeLang = lang;
+  document.querySelectorAll('.lang-tab').forEach(t => t.classList.toggle('active', t.dataset.lang === lang));
+  document.getElementById('result-col-header').textContent = LANG_NAMES[lang] + ' 译文';
+  // Re-render result and notes columns
+  rows.forEach(row => {
+    renderResultCell(row.id);
+    renderNotesCell(row.id);
+  });
+}
+
+// ── Row management ──────────────────────────────────────
+function addRow(label='', source='') {
+  const id = ++rowCounter;
+  const row = { id, label, source, results:{de:'',fr:'',it:'',es:''}, notes:{de:[],fr:[],it:[],es:[]}, status:'idle' };
+  rows.push(row);
+  appendRowToTable(row);
+  updateRowCount();
+  return id;
+}
+
+function deleteRow(id) {
+  rows = rows.filter(r => r.id !== id);
+  const tr = document.getElementById('row-' + id);
+  if (tr) tr.remove();
+  updateRowCount();
+}
+
+function updateRowCount() {
+  document.getElementById('row-count').textContent = rows.length + ' 个字段';
+}
+
+function clearAll() {
+  if (!confirm('确定清空所有行吗？')) return;
+  rows = [];
+  document.getElementById('table-body').innerHTML = '';
+  rowCounter = 0;
+  updateRowCount();
+}
+
+// ── Table rendering ─────────────────────────────────────
+function appendRowToTable(row) {
+  const tbody = document.getElementById('table-body');
+  const tr = document.createElement('tr');
+  tr.id = 'row-' + row.id;
+  tr.innerHTML = `
+    <td class="cell-status"><div class="row-dot" id="dot-${row.id}"></div></td>
+    <td class="cell-label">
+      <input class="label-input" id="label-${row.id}" value="${escHtml(row.label)}" placeholder="字段名称…"
+        oninput="rows.find(r=>r.id==${row.id}).label=this.value">
+    </td>
+    <td class="cell-source">
+      <textarea class="source-input" id="source-${row.id}" placeholder="输入原文（支持 **加粗** *斜体*）…" rows="1"
+        oninput="onSourceInput(${row.id},this.value)">${escHtml(row.source)}</textarea>
+    </td>
+    <td class="cell-result" id="result-cell-${row.id}">
+      <div class="result-text empty" id="result-${row.id}">—</div>
+    </td>
+    <td class="cell-copy">
+      <button class="copy-cell-btn" id="copybtn-${row.id}" onclick="copyResult(${row.id})" title="复制译文">⎘</button>
+    </td>
+    <td class="cell-notes" id="notes-cell-${row.id}">
+      <span class="note-empty">—</span>
+    </td>
+    <td class="cell-action">
+      <button class="del-btn" onclick="deleteRow(${row.id})" title="删除">✕</button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+  // Auto-resize textarea
+  autoResize(document.getElementById('source-' + row.id));
+}
+
+function renderResultCell(id) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  const el = document.getElementById('result-' + id);
+  if (!el) return;
+  const text = row.results[activeLang];
+  if (text) {
+    el.innerHTML = renderMarkdown(text);
+    el.className = 'result-text';
+  } else {
+    el.textContent = '—';
+    el.className = 'result-text empty';
+  }
+}
+
+function renderNotesCell(id) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  const el = document.getElementById('notes-cell-' + id);
+  if (!el) return;
+  const notes = row.notes[activeLang];
+  if (notes && notes.length > 0) {
+    el.innerHTML = notes.map(n => {
+      let cls = 'note-tag';
+      if (n.includes('°') || n.includes('cm') || n.includes('ml') || n.includes('kg') || n.includes('单位')) cls += ' unit';
+      else if (n.includes('格式') || n.includes('日期') || n.includes('货币') || n.includes('€')) cls += ' format';
+      return `<span class="${cls}">${escHtml(n)}</span>`;
+    }).join('');
+  } else {
+    el.innerHTML = '<span class="note-empty">—</span>';
+  }
+}
+
+function renderMarkdown(text) {
+  // Bold, italic, preserve line breaks
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/\n/g,'<br>');
+}
+
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Source input ─────────────────────────────────────────
+let inputTimers = {};
+function onSourceInput(id, val) {
+  const row = rows.find(r => r.id === id);
+  if (row) row.source = val;
+  autoResize(document.getElementById('source-' + id));
+  clearTimeout(inputTimers[id]);
+  if (val.trim()) {
+    setDot(id, 'idle');
+    inputTimers[id] = setTimeout(() => translateRow(id), 900);
+  }
+}
+
+function autoResize(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+// ── Translation ──────────────────────────────────────────
+async function translateRow(id) {
+  if (!apiKey) { setStatusBar('请先设置 API Key'); return; }
+  const row = rows.find(r => r.id === id);
+  if (!row || !row.source.trim()) return;
+  setDot(id, 'loading');
+  const module = document.getElementById('module-select').value;
+  const prompt = SYSTEM_PROMPT + '\n\n模块：' + MODULE_CONTEXT[module] + '\n\n原文：' + row.source;
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{temperature:0.3,maxOutputTokens:1500} }) }
+    );
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.candidates[0].content.parts[0].text;
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    ['de','fr','it','es'].forEach(l => {
+      row.results[l] = parsed[l]?.text || '';
+      row.notes[l] = parsed[l]?.notes || [];
+    });
+    setDot(id, 'done');
+    renderResultCell(id);
+    renderNotesCell(id);
+    setStatusBar('翻译完成');
+  } catch(e) {
+    setDot(id, 'error');
+    setStatusBar('错误：' + e.message);
+  }
+}
+
+async function translateAll() {
+  if (!apiKey) { setStatusBar('请先设置 API Key'); return; }
+  const pending = rows.filter(r => r.source.trim());
+  if (pending.length === 0) { setStatusBar('没有可翻译的内容'); return; }
+  setStatusBar('翻译中 0/' + pending.length + '…');
+  let done = 0;
+  for (const row of pending) {
+    await translateRow(row.id);
+    done++;
+    setStatusBar('翻译中 ' + done + '/' + pending.length + '…');
+    await sleep(300); // avoid rate limit
+  }
+  setStatusBar('全部翻译完成（' + done + ' 条）');
+}
+
+async function translateSelected() {
+  // Translate rows that have source but no result for current lang
+  const pending = rows.filter(r => r.source.trim() && !r.results[activeLang]);
+  if (pending.length === 0) { setStatusBar('没有待翻译的行'); return; }
+  for (const row of pending) {
+    await translateRow(row.id);
+    await sleep(300);
+  }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function setDot(id, state) {
+  const el = document.getElementById('dot-' + id);
+  if (el) el.className = 'row-dot ' + state;
+}
+
+function setStatusBar(msg) {
+  document.getElementById('status-bar').textContent = msg;
+}
+
+// ── Copy ─────────────────────────────────────────────────
+function copyResult(id) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  const text = row.results[activeLang];
+  if (!text) return;
+  // Copy plain text (strip markdown)
+  const plain = text.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1');
+  navigator.clipboard.writeText(plain).then(() => {
+    const btn = document.getElementById('copybtn-' + id);
+    if (btn) { btn.textContent = '✓'; btn.classList.add('copied'); setTimeout(()=>{btn.textContent='⎘';btn.classList.remove('copied');},1500); }
+  });
+}
+
+// ── Export CSV ───────────────────────────────────────────
+function exportCSV() {
+  const module = document.getElementById('module-select').value;
+  const langs = ['de','fr','it','es'];
+  const langNames = {de:'德语',fr:'法语',it:'意大利语',es:'西班牙语'};
+  let csv = '字段标签,原文,' + langs.map(l=>langNames[l]+'译文').join(',') + ',' + langs.map(l=>langNames[l]+'备注').join(',') + '\n';
+  rows.forEach(row => {
+    const cols = [row.label, row.source, ...langs.map(l=>row.results[l]||''), ...langs.map(l=>(row.notes[l]||[]).join('; '))];
+    csv += cols.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',') + '\n';
+  });
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'translations_' + module + '_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+</script>
+</body>
+</html>
